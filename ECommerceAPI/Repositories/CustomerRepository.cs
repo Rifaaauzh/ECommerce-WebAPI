@@ -1,46 +1,27 @@
 using ECommerceAPI.Data;
 using ECommerceAPI.Models;
+using ECommerceAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ECommerceAPI.Repositories
+namespace ECommerceAPI.Repositories.Implementations
 {
-    public class CustomerRepository : ICustomerRepository
+    public class CustomerRepository : GenericRepository<Customer>, ICustomerRepository
     {
-        private readonly ECommerceDbContext _context;
-
-        public CustomerRepository(ECommerceDbContext context)
+        public CustomerRepository(ECommerceDbContext context) : base(context)
         {
-            _context = context;
         }
 
-        public async Task<List<Customer>> GetAllAsync()
+        public async Task<Customer?> GetCustomerWithOrdersAsync(int id)
         {
-            return await _context.Customers.ToListAsync();
+            return await _context.Customers
+                .Include(c => c.Orders)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<Customer?> GetByIdAsync(int id)
+        public async Task<Customer?> GetCustomerByEmailAsync(string email)
         {
-            return await _context.Customers.FindAsync(id);
-        }
-
-        public async Task AddAsync(Customer customer)
-        {
-            await _context.Customers.AddAsync(customer);
-        }
-
-        public void Update(Customer customer)
-        {
-            _context.Customers.Update(customer);
-        }
-
-        public void Delete(Customer customer)
-        {
-            _context.Customers.Remove(customer);
-        }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
+            return await _context.Customers
+                .FirstOrDefaultAsync(c => c.Email == email);
         }
     }
 }
